@@ -1,0 +1,13 @@
+{
+    "cSpell.words": [
+        "bokeh",
+        "colmmns",
+        "itertools",
+        "pylint",
+        "webgl",
+        "xaxis",
+        "yaxis"
+    ],
+    "python.formatting.provider": "black",
+    "python.pythonPath": "/usr/bin/python"
+}
