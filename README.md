@@ -1,2 +1,2 @@
-# bokeh_chart_maker
+# Bokeh Chart Maker
 Simple tool for creating and exporting bokeh plot without coding.
