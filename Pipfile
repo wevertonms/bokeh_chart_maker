@@ -12,7 +12,7 @@ bokeh = ">=1.4"
 pandas = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.6"
 
 [pipenv]
 allow_prereleases = true
