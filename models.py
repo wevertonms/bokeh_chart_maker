@@ -1,8 +1,8 @@
 from itertools import cycle
 
-from bokeh.core.enums import MarkerType, NamedColor, LineDash, DashPattern
-from bokeh.models import LegendItem, Panel, Column
-from bokeh.models.widgets import ColorPicker, Select, TextInput, Slider, Button
+from bokeh.core.enums import DashPattern, LineDash, MarkerType, NamedColor
+from bokeh.models import Column, LegendItem, Panel
+from bokeh.models.widgets import Button, ColorPicker, Select, Slider, TextInput
 from bokeh.palettes import Category10_10  # pylint: disable=no-name-in-module
 
 COLORS = cycle(Category10_10)
@@ -118,4 +118,3 @@ def get_widgets(model):
     if widgets_list:
         return Column(*sorted(widgets_list, key=lambda w: w.name), width=380)
     return None
-
