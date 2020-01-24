@@ -1,6 +1,8 @@
-const file_name = source.data["file_name"][0];
-file_text = source.data["html"][0].toString();
-const blob = new Blob([file_text], { type: "text/csv;charset=utf-8;" });
+/*global source*/
+/*eslint no-undef: "error"*/
+const fileName = source.data["file_name"][0];
+const fileText = source.data["html"][0].toString();
+const blob = new Blob([fileText], { type: "text/csv;charset=utf-8;" });
 
 //addresses IE
 if (navigator.msSaveBlob) {
