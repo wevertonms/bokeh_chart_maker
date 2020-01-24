@@ -1,6 +1,6 @@
 from itertools import cycle
 
-from bokeh.core.enums import DashPattern, LineDash, MarkerType, NamedColor
+from bokeh.core.enums import LineDash, MarkerType, NamedColor
 from bokeh.models import Column, LegendItem, Panel
 from bokeh.models.widgets import Button, ColorPicker, Select, Slider, TextInput
 from bokeh.palettes import Category10_10  # pylint: disable=no-name-in-module
@@ -102,12 +102,6 @@ def get_widgets(model):
             w = Slider(start=0, step=1, end=20, **kw)
         elif p.endswith("text") or p.endswith("label"):
             w = TextInput(**kw)
-        # elif p.endswith("cap"):
-        #     w = Select(options=list(LineCap), **kw)
-        # elif p.endswith("dash"):
-        #     patterns = [(_, _) for _ in DashPattern]
-        #     kw["value"] = v or patterns[0][0]
-        #     w = Select(options=patterns, **kw)
         else:
             continue
         if isinstance(w, ColorPicker):
