@@ -10,6 +10,7 @@ black = "*"
 [packages]
 bokeh = ">=1.4"
 pandas = "*"
+Pillow = ">=6.2.2"
 
 [requires]
 python_version = "3.6"
