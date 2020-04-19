@@ -9,5 +9,8 @@
         "yaxis"
     ],
     "python.formatting.provider": "black",
-    "python.pythonPath": "/home/weverton/.local/share/virtualenvs/bokeh_chart_maker-dYfMgG0s/bin/python"
+    "python.pythonPath": "/usr/bin/python3.7",
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
 }

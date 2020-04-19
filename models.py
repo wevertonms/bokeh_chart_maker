@@ -1,29 +1,53 @@
+"""Models used to simplify glyphs use."""
+
+
 from itertools import cycle
 
-from bokeh.core.enums import LineDash, MarkerType, NamedColor
+from bokeh.core.enums import MarkerType, NamedColor
 from bokeh.models import Column, LegendItem, Panel
 from bokeh.models.widgets import Button, ColorPicker, Select, Slider, TextInput
 from bokeh.palettes import Category10_10  # pylint: disable=no-name-in-module
 
 COLORS = cycle(Category10_10)
 
-prettify = lambda p: p.replace("_", " ").capitalize()
+
+def prettify(prop):
+    """Makes the property name look prettier.
+
+    Args:
+        prop (str): property name
+
+    Returns:
+        str: prettier property name
+    """
+    return prop.replace("_", " ").capitalize()
 
 
-class Series:
+ID = 0
+
+
+class Series(object):
+    """Wrapper for series glyphs."""
+
     labels = []
-    id = 0
 
     def __init__(self, label, plot, renderer):
-        self.id = Series.id
-        Series.id += 1
+        """Constructor.
+
+        Args:
+            label (str): label to show on legend.
+            plot (bokeh.Figure): plot do put the series on.
+            renderer (bokeh.model.renderer): glyph renderer.
+        """
+        self.ID = Series.ID
+        Series.ID += 1
         while label in self.labels:
             try:
                 last_number = int(label.split(" ")[-1])
                 last_number += 1
                 label = label[: -len(str(last_number))] + str(last_number)
             except:
-                label = label + " 1"
+                label = "% 1" % label
         self.labels.append(label)
         self.plot = plot
         self.glyph = renderer.glyph
@@ -31,15 +55,33 @@ class Series:
         self.plot.legend.items.append(legend_item)
         self.legend_label = TextInput(title="Legend label", value=label)
         self.legend_label.on_change("value", self.update_legend_label)
-        self.panel = Panel(child=Column(self.legend_label, width=360), title=label)
-        self.panel.child.children.append(get_widgets(self.glyph))
+        panel_width = 360
+        self.panel = Panel(
+            child=Column(self.legend_label, width=panel_width), title=label,
+        )
+        widgets_list = get_widgets(self.glyph)
+        if widgets_list:
+            column_width = 380
+            self.panel.child.children.append(
+                Column(
+                    *sorted(widgets_list, key=lambda widget: widget.name),
+                    width=column_width,
+                )
+            )
         self.delete_button = Button(label="Delete glyph", button_type="danger")
         self.panel.child.children.append(self.delete_button)
 
     def update_legend_label(self, attr, old, new):
+        """Update the legend label.
+
+        Args:
+            attr (str): updated attribute.
+            old (str): old value
+            new (str): new value.
+        """
         legend_items = self.plot.legend.items
         for item in legend_items:
-            if self.glyph in [r.glyph for r in item.renderers]:
+            if self.glyph in (renderer.glyph for renderer in item.renderers):
                 item.label["value"] = new
         legend_items = list(legend_items)
         self.plot.legend.items = []
@@ -53,7 +95,7 @@ def line_series(plot, **kw):
         plot (bokeh.plotting.Figure): gráfico.
         kw: keyword-argument's para o glyph.
 
-    Return:
+    Returns:
         Series: objeto associado com o glyph no gráfico.
     """
     renderer = plot.line(line_color=next(COLORS), line_width=2, **kw)
@@ -67,48 +109,63 @@ def scatter_series(plot, **kw):
         plot (bokeh.plotting.Figure): gráfico.
         kw: keyword-argument's para o glyph.
 
-    Return:
+    Returns:
         Series: objeto associado com o glyph no gráfico.
     """
     renderer = plot.scatter(color=next(COLORS), line_width=1, **kw)
     return Series("Scatter 1", plot, renderer)
 
 
+def prop_to_widget(prop, value):
+    kw = {
+        "title": prettify(prop),
+        "name": prettify(prop),
+        "value": value,
+        "width": 360,
+    }
+    if "alpha" in prop:
+        slider_step = 0.5
+        return Slider(start=0, step=slider_step, end=1, **kw)
+    elif "color" in prop:
+        if value in list(NamedColor):
+            return Select(options=list(NamedColor), **kw)
+        kw.pop("value")
+        return ColorPicker(color=value, **kw)
+    elif prop.endswith("width"):
+        slider_step = 0.2
+        return Slider(start=0, step=slider_step, end=5, **kw)
+    elif "marker" in prop:
+        return Select(options=list(MarkerType), **kw)
+    elif prop == "size":
+        end_value = 20
+        return Slider(start=0, step=1, end=end_value, **kw)
+    elif prop.endswith("text") or prop.endswith("label"):
+        return TextInput(**kw)
+    return None
+
+
 def get_widgets(model):
+    """Crate a column width widgets associated to item properties.
+
+    Args:
+        model (bokeh.models.Model): model.
+
+    Returns:
+        Column: column with the widgets.
+    """
     widgets_list = []
-    for p, v in model.properties_with_values().items():
-        if isinstance(v, dict):
-            if "value" in v:
-                v = v.get("value")
+    for prop, value in model.properties_with_values().items():
+        if isinstance(value, dict):
+            if "value" in value:
+                value = value.get("value")
             else:
                 continue
-        if v is None:
+        if value is None:
             continue
-
-        kw = dict(title=prettify(p), name=prettify(p), value=v, width=360)
-        if "alpha" in p:
-            w = Slider(start=0, step=0.05, end=1, **kw)
-        elif "color" in p:
-            if v in list(NamedColor):
-                w = Select(options=list(NamedColor), **kw)
-            else:
-                kw.pop("value")
-                w = ColorPicker(color=v, **kw)
-        elif p.endswith("width"):
-            w = Slider(start=0, step=0.2, end=5, **kw)
-        elif "marker" in p:
-            w = Select(options=list(MarkerType), **kw)
-        elif p == "size":
-            w = Slider(start=0, step=1, end=20, **kw)
-        elif p.endswith("text") or p.endswith("label"):
-            w = TextInput(**kw)
+        widget = prop_to_widget(prop, value)
+        if isinstance(widget, ColorPicker):
+            widget.js_link("color", model, prop)
         else:
-            continue
-        if isinstance(w, ColorPicker):
-            w.js_link("color", model, p)
-        else:
-            w.js_link("value", model, p)
-        widgets_list.append(w)
-    if widgets_list:
-        return Column(*sorted(widgets_list, key=lambda w: w.name), width=380)
-    return None
+            widget.js_link("value", model, prop)
+        widgets_list.append(widget)
+    return widgets_list

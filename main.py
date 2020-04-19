@@ -13,8 +13,8 @@ from bokeh.io import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import CustomJS, DataTable, Div, Legend, TableColumn, Tabs
 from bokeh.models.widgets import Button, FileInput, Select, TextInput
-from bokeh.palettes import Category10_10  # pylint: disable=no-name-in-module
-from bokeh.plotting import ColumnDataSource, figure, output_file, save
+from bokeh.palettes import Category10_10
+from bokeh.plotting import ColumnDataSource, figure
 from bokeh.resources import INLINE
 from bokeh.server.server import Server
 
@@ -23,12 +23,11 @@ import models
 
 def create_layout():
     """Inclui o gráficos e os controles no curdoc do Bokeh Server."""
-    plot_html = ColumnDataSource(dict(file_html=["Title"], html=[""]))
+    plot_html = ColumnDataSource({"file_html": ["Title"], "html": [""]})
     plot = figure(
         title="Title",
         sizing_mode="stretch_both",
         tools="wheel_zoom,box_zoom,pan,,crosshair,reset,save",
-        # tooltips=[("y", "$y"), ("x", "$x")],
         active_scroll="wheel_zoom",
         toolbar_location="above",
         output_backend="webgl",
@@ -58,10 +57,8 @@ def create_layout():
     def update_plot_html(event):
         title = plot.title.text
         file_name = title + ".html"
-        # output_file(file_name, title=title, mode="inline")
-        # save(plot)
         html = file_html(plot, INLINE, title)
-        plot_html.data = dict(file_name=[file_name], html=[html])
+        plot_html.data = {"file_name": [file_name], "html": [html]}
 
     # Widgets (controls) ======================================================
     # Plot controls
@@ -74,13 +71,13 @@ def create_layout():
     save_button = Button(label="Save", align="end")
     save_button.on_click(update_plot_html)
     with open("download.js") as f:
-        callback = CustomJS(args=dict(source=plot_html), code=f.read())
+        callback = CustomJS(args={"source": plot_html, "code": f.read()})
     download_button.js_on_click(callback)
     plot_controls = row(
-        plot_title, x_title, y_title, legend_position, save_button, download_button
+        plot_title, x_title, y_title, legend_position, save_button, download_button,
     )
 
-    def update_plot(attr, old, new):
+    def update_plot(attr, old, new):  # pylint: disable=unused-argument
         plot.title.text = plot_title.value
         plot.xaxis.axis_label = x_title.value
         plot.yaxis.axis_label = y_title.value
@@ -103,21 +100,24 @@ def create_layout():
 
     def update_series_source_controls(attr, old, new):
         colmmns = list(table_source.data.keys())
-        kw = dict(options=colmmns, width=80)
-        values_selectors["x"] = Select(title=f"x-values", **kw)
-        values_selectors["y"] = Select(title=f"y-values", **kw)
+        kw = {"options": colmmns, "width": 80}
+        values_selectors["x"] = Select(title="x-values", **kw)
+        values_selectors["y"] = Select(title="y-values", **kw)
         series_source_controls.children = list(values_selectors.values())
 
     glyph_type.on_change("value", update_series_source_controls)
     glyph_type.value = "line"
     add_button = Button(label="Add glyph", button_type="success", width=50, align="end")
+    data_tab = Panel(title="circle", child=[Div(text="<h3>Load file</h3>", height=35),
+                upload_button,
+                datatable,
+                row(glyph_type, series_source_controls, add_button, width=390),
+                Div(text="<h3>Glyphs</h3>", height=35),
+                tabs])
     side_controls.children = [
-        Div(text="<h3>Load file</h3>", height=35),
-        upload_button,
-        datatable,
-        row(glyph_type, series_source_controls, add_button, width=390),
-        Div(text="<h3>Glyphs</h3>", height=35),
-        tabs,
+        Tabs(
+           tabs=[data_tab]
+        )
     ]
 
     def add_series(event):
@@ -126,14 +126,14 @@ def create_layout():
         for key, selector in values_selectors.items():
             column_name = selector.value or any_col
             source.data[key] = table_source.data[column_name]
-        vars_map = dict((k, str(k)) for k in values_selectors.keys())
+        vars_map = {key: str(key) for key in values_selectors.keys()}
         if glyph_type.value == "line":
             series = models.line_series(plot, source=source, **vars_map)
         elif glyph_type.value == "scatter":
             series = models.scatter_series(plot, source=source, **vars_map)
 
         def delete_series(event):
-            plot.renderers = [r for r in plot.renderers if r.glyph != series.glyph]
+            plot.renderers = [_ for _ in plot.renderers if _.glyph != series.glyph]
             legend_items = list(plot.legend.items)
             plot.legend.items = [
                 item for item in legend_items if series.glyph != item.renderers[0].glyph
@@ -156,13 +156,13 @@ def modify_doc(doc):
 
 
 if __name__ == "__main__":
-    server = Server({"/": modify_doc})
-    server.start()
-    print(f"Opening Bokeh application on http://localhost:5006/")
-    server.io_loop.add_callback(server.show, "/")
-    server.io_loop.start()
+    SERVER = Server({"/": modify_doc})
+    SERVER.start()
+    print("Opening Bokeh application on http://localhost:5006/")
+    SERVER.io_loop.add_callback(SERVER.show, "/")
+    SERVER.io_loop.start()
 else:
-    layout = row(sizing_mode="stretch_both")
-    layout.children = create_layout()
-    curdoc().add_root(layout)
+    LAYOUT = row(sizing_mode="stretch_both")
+    LAYOUT.children = create_layout()
+    curdoc().add_root(LAYOUT)
     curdoc().title = "Chart Studio"
