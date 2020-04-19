@@ -4,20 +4,21 @@
 
 import base64
 import io
+from itertools import cycle
 
 import pandas as pd
-
+from bokeh.core.enums import LegendLocation
+from bokeh.embed import file_html
 from bokeh.io import curdoc
-from bokeh.server.server import Server
-from bokeh.models import DataTable, TableColumn, Tabs, Legend, CustomJS, Div
-from bokeh.models.widgets import Select, TextInput, FileInput, Button
 from bokeh.layouts import column, row
 from bokeh.models import CustomJS, DataTable, Div, Legend, TableColumn, Tabs
 from bokeh.models.widgets import Button, FileInput, Select, TextInput
 from bokeh.palettes import Category10_10
 from bokeh.plotting import ColumnDataSource, figure
 from bokeh.resources import INLINE
-from bokeh.embed import file_html
+from bokeh.server.server import Server
+
+import models
 
 
 def create_layout():
@@ -35,10 +36,13 @@ def create_layout():
     plot.yaxis.axis_label = "Y"
     plot.add_layout(Legend())
     plot.legend.click_policy = "hide"
+    plot.legend.background_fill_alpha = 0.6
     table_source = ColumnDataSource()
     side_controls = column(width=400, height=200)
     series_source_controls = row(sizing_mode="scale_width")
     tabs = Tabs()
+    models.COLORS = cycle(Category10_10)
+    models.Series.labels = []
 
     def upload_callback(attr, old, new):
         """Função que atualiza os dados do arquivo aberto."""
@@ -124,9 +128,9 @@ def create_layout():
             source.data[key] = table_source.data[column_name]
         vars_map = {key: str(key) for key in values_selectors.keys()}
         if glyph_type.value == "line":
-            series = line_series(plot, source=source, **vars_map)
+            series = models.line_series(plot, source=source, **vars_map)
         elif glyph_type.value == "scatter":
-            series = scatter_series(plot, source=source, **vars_map)
+            series = models.scatter_series(plot, source=source, **vars_map)
 
         def delete_series(event):
             plot.renderers = [_ for _ in plot.renderers if _.glyph != series.glyph]
