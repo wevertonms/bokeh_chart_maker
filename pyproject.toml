@@ -9,6 +9,7 @@ license = "MIT"
 python = "^3.7"
 bokeh = "^2.0.1"
 pandas = "^1.0.3"
+rope = "^0.16.0"
 
 [tool.poetry.dev-dependencies]
 black = "^19.10b0"

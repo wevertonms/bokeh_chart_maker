@@ -1,13 +1,28 @@
 from itertools import cycle
 
-from bokeh.core.enums import LineDash, MarkerType, NamedColor
+from bokeh.core.enums import MarkerType, NamedColor
 from bokeh.models import Column, LegendItem, Panel
-from bokeh.models.widgets import Button, ColorPicker, Select, Slider, TextInput
+from bokeh.models.widgets import (
+    Button,
+    ColorPicker,
+    Select,
+    Slider,
+    TextInput,
+    Toggle,
+)
 from bokeh.palettes import Category10_10  # pylint: disable=no-name-in-module
 
 COLORS = cycle(Category10_10)
 
-prettify = lambda p: p.replace("_", " ").capitalize()
+
+def prettify(prop):
+    """Makes the property name look prettier.
+    Args:
+        prop (str): property name
+    Returns:
+        str: prettier property name
+    """
+    return prop.replace("_", " ").capitalize()
 
 
 class Series:
@@ -102,10 +117,16 @@ def get_widgets(model):
             w = Slider(start=0, step=1, end=20, **kw)
         elif p.endswith("text") or p.endswith("label"):
             w = TextInput(**kw)
+        # elif p == "visible":
+        #     w = Toggle(label="Visible", active=True, name="Visible")
+        # elif p == "dimension":
+        #     w = Select(options=["height", "width"], **kw)
         else:
             continue
         if isinstance(w, ColorPicker):
             w.js_link("color", model, p)
+        elif isinstance(w, Toggle):
+            w.js_link("active", model, p)
         else:
             w.js_link("value", model, p)
         widgets_list.append(w)

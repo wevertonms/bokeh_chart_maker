@@ -11,14 +11,23 @@ from bokeh.core.enums import LegendLocation
 from bokeh.embed import file_html
 from bokeh.io import curdoc
 from bokeh.layouts import column, row
-from bokeh.models import CustomJS, DataTable, Div, Legend, TableColumn, Tabs
+from bokeh.models import (
+    CustomJS,
+    DataTable,
+    Div,
+    Legend,
+    Panel,
+    TableColumn,
+    Tabs,
+)
 from bokeh.models.widgets import Button, FileInput, Select, TextInput
 from bokeh.palettes import Category10_10  # pylint: disable=no-name-in-module
-from bokeh.plotting import ColumnDataSource, figure, output_file, save
+from bokeh.plotting import ColumnDataSource, figure
 from bokeh.resources import INLINE
 from bokeh.server.server import Server
 
 import models
+import panels
 
 
 def create_layout():
@@ -39,9 +48,8 @@ def create_layout():
     plot.legend.click_policy = "hide"
     plot.legend.background_fill_alpha = 0.6
     table_source = ColumnDataSource()
-    side_controls = column(width=400, height=200)
     series_source_controls = row(sizing_mode="scale_width")
-    tabs = Tabs()
+    glyphs_tabs = Tabs()
     models.COLORS = cycle(Category10_10)
     models.Series.labels = []
 
@@ -111,14 +119,22 @@ def create_layout():
     glyph_type.on_change("value", update_series_source_controls)
     glyph_type.value = "line"
     add_button = Button(label="Add glyph", button_type="success", width=50, align="end")
-    side_controls.children = [
-        Div(text="<h3>Load file</h3>", height=35),
-        upload_button,
-        datatable,
-        row(glyph_type, series_source_controls, add_button, width=390),
-        Div(text="<h3>Glyphs</h3>", height=35),
-        tabs,
-    ]
+    data_panel = Panel(
+        title="Data",
+        child=column(
+            [
+                Div(text="<h3>Load file</h3>", height=35),
+                upload_button,
+                datatable,
+                row(glyph_type, series_source_controls, add_button, width=390,),
+                Div(text="<h3>Glyphs</h3>", height=35),
+                glyphs_tabs,
+            ]
+        ),
+    )
+    annotations_panel = panels.AnnotationPanel("Annotation", plot)
+    side_controls = column(width=400, height=200)
+    side_controls.children = [Tabs(tabs=[data_panel, annotations_panel.panel])]
 
     def add_series(event):
         any_col = list(table_source.data.keys())[0]
@@ -138,10 +154,12 @@ def create_layout():
             plot.legend.items = [
                 item for item in legend_items if series.glyph != item.renderers[0].glyph
             ]
-            tabs.tabs = [panel for panel in tabs.tabs if panel != series.panel]
+            glyphs_tabs.tabs = [
+                panel for panel in glyphs_tabs.tabs if panel != series.panel
+            ]
 
         series.delete_button.on_click(delete_series)
-        tabs.tabs.append(series.panel)
+        glyphs_tabs.tabs.append(series.panel)
 
     add_button.on_click(add_series)
     return [side_controls, column(plot_controls, plot, sizing_mode="stretch_width")]
