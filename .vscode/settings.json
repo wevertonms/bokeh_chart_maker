@@ -9,5 +9,5 @@
         "yaxis"
     ],
     "python.formatting.provider": "black",
-    "python.pythonPath": "~/.cache/pypoetry/virtualenvs/bokeh-chart-maker-AHJqdbQ3-py3.8/bin/python"
+    "python.pythonPath": "/home/wms/.cache/pypoetry/virtualenvs/bokeh-chart-maker-bYu_dSsu-py3.8/bin/python"
 }

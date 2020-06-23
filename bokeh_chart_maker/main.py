@@ -73,7 +73,7 @@ def create_layout():
     download_button = Button(label="Download saved", button_type="success", align="end")
     save_button = Button(label="Save", align="end")
     save_button.on_click(update_plot_html)
-    with open("download.js") as f:
+    with open("bokeh_chart_maker/download.js") as f:
         callback = CustomJS(args=dict(source=plot_html), code=f.read())
     download_button.js_on_click(callback)
     plot_controls = row(
