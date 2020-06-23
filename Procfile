@@ -1,1 +1,1 @@
-web: bokeh serve --port=$PORT --allow-websocket-origin=bokehchartmaker.herokuapp.com --address=0.0.0.0 --use-xheaders .
+web: bokeh serve --port=$PORT --allow-websocket-origin=bokehchartmaker.herokuapp.com --address=0.0.0.0 --use-xheaders bokeh_chart_maker

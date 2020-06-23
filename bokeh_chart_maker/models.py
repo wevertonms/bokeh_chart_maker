@@ -32,9 +32,10 @@ class Series:
         self.legend_label = TextInput(title="Legend label", value=label)
         self.legend_label.on_change("value", self.update_legend_label)
         self.panel = Panel(child=Column(self.legend_label, width=360), title=label)
-        self.panel.child.children.append(get_widgets(self.glyph))
+        panel_children = self.panel.child.children  # pylint:disable=no-member
+        panel_children.append(get_widgets(self.glyph))
         self.delete_button = Button(label="Delete glyph", button_type="danger")
-        self.panel.child.children.append(self.delete_button)
+        panel_children.append(self.delete_button)
 
     def update_legend_label(self, attr, old, new):
         legend_items = self.plot.legend.items
